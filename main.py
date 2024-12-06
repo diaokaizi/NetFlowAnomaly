@@ -52,4 +52,5 @@ if __name__ =='__main__':
     config["device"]=device
     netFlow_anomaly = NetFlowAnomaly(config)
     # netFlow_anomaly.train("/vdb2/cst/GCN/data/cst_out")
-    netFlow_anomaly.run_detect_job("/vdb2/cst/GCN/data/cst_out2")
+    # netFlow_anomaly.run_detect_job("/vdb2/cst/GCN/data/cst_out2")
+    netFlow_anomaly.run_detect_job()

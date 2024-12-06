@@ -2,6 +2,7 @@ seed: 42
 output_dir: data
 model_dir: model
 percentage: 0.05
+netflow_datasource_path: /iharbor/mahegu/t_fpc_flow_log_record
 
 f_dygat:
   epochs: 1

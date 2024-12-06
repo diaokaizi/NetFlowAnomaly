@@ -6,8 +6,8 @@ from torch.nn.modules.activation import Tanh
 from torch.nn.parameter import Parameter
 from torch.utils.data import dataset
 from torch.nn.functional import softmax
-import Flow_DyGAT.utils as u
-from Flow_DyGAT.layers import FG
+import f_dygat.utils as u
+from f_dygat.layers import FG
 from torch_geometric.nn import GATConv
 
 class IPFeatExtractor(nn.Module):

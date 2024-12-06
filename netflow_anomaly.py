@@ -9,23 +9,46 @@ from f_dygat.f_dygat import Flow_DyGAT
 from f_dygat.utils import set_seed
 from maegan.maegan import MAEGAN
 import pandas as pd
+import datetime
+from preprocess import Preprocess
+import shutil
 
 class NetFlowAnomaly:
     def __init__(self, config):
         self.config = config
+        self.preprocess = Preprocess(config)
 
-    def run_detect_job(self, input_dir):
+    def get_job_info(self):
+        now = datetime.datetime.now()
+        timestamp = datetime.datetime.timestamp(now)
+        timestamp = datetime.datetime.fromtimestamp(timestamp - timestamp % 300 - 1800) # 获取半个小时前的数据
+        date_dir = timestamp.strftime('%Y%m%d')
+        file_name = timestamp.strftime('%Y%m%d.%H%M.tar.gz')
+        file_path = os.path.join(self.config["netflow_datasource_path"], date_dir, file_name)
+        job_name = timestamp.strftime('job_%Y%m%d_%H%M')
+        return file_path, job_name
+    
+    def run_detect_job(self):
+        t0=time()
+        file_path, job_name = self.get_job_info()
+        output_dir = os.path.join(self.config["output_dir"], job_name)
+        os.makedirs(output_dir, exist_ok=True)
+        csv_temp_output_dir = os.path.join(output_dir, "csv_temp")
+        self.preprocess.process(
+            output_dir=csv_temp_output_dir, 
+            encoder_path=os.path.join(csv_temp_output_dir, "csv_temp"),
+            input_file_path_list=[file_path]
+            )
+
         # Flow_DyGAT
         # 图特征提取
         flow_dygat = Flow_DyGAT(self.config)
         # 构造图结构
-        data = flow_dygat.read_data(input_dir)
+        data = flow_dygat.read_data(csv_temp_output_dir)
         # 图嵌入计算
         data_embs, flow_with_preds = flow_dygat.predict_with_flow_anomaly(data)
 
         # MAEGAN
-        output_dir = os.path.join(self.config["output_dir"], "test1")
-        os.makedirs(output_dir, exist_ok=True)
         # 加载模型
         maegan = MAEGAN.load(self.config)
         # 异常检测
@@ -36,6 +59,9 @@ class NetFlowAnomaly:
         anomaly_indices = np.argsort(scores)[-num_samples:] #选择异常概率最大的几个样本
         anomaly_flow_with_preds = flow_with_preds[anomaly_indices]
         self.find_anomaly_ip(anomaly_flow_with_preds, os.path.join(output_dir, 'top_ips.csv'))
+
+        shutil.rmtree(csv_temp_output_dir)
+        print('总耗时', time()-t0)
 
     def train(self, input_dir):
         # Flow_DyGAT训练
