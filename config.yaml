@@ -1,0 +1,23 @@
+seed: 42
+output_dir: data
+model_dir: model
+percentage: 0.05
+
+f_dygat:
+  epochs: 1
+  learning_rate: 0.0001
+  in_dim: 69
+  out_dim: 32
+  seq_len: 5
+  flow_num: 1000
+
+maegan:
+  n_epochs: 10
+  in_dim: 64
+  maxAE: 10
+  batch_size: 64
+  lr: 0.0001
+  b1: 0.5
+  b2: 0.9
+  n_critic: 5
+
