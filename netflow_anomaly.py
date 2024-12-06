@@ -39,7 +39,7 @@ class NetFlowAnomaly:
             encoder_path=os.path.join(csv_temp_output_dir, "csv_temp"),
             input_file_path_list=[file_path]
             )
-
+        
         # Flow_DyGAT
         # 图特征提取
         flow_dygat = Flow_DyGAT(self.config)
@@ -62,6 +62,8 @@ class NetFlowAnomaly:
 
         shutil.rmtree(csv_temp_output_dir)
         print('总耗时', time()-t0)
+        with open('data/time.txt', 'a') as f:
+            f.write(f'总耗时: {time()-t0} 秒\n')
 
     def train(self, input_dir):
         # Flow_DyGAT训练
