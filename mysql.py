@@ -1,13 +1,13 @@
 import pymysql
 
 class MySQL:
-    def __init__(self):
+    def __init__(self, config):
         self.connc = pymysql.Connect(
-                    host='127.0.0.1',
-                    user='root',
-                    password="123456",
-                    database='netflow',
-                    port=3306,
+                    host=config['mysql']['host'],
+                    user=config['mysql']['user'],
+                    password=config['mysql']['password'],
+                    database=config['mysql']['database'],
+                    port=int(config['mysql']['port']),
                     charset="utf8",
         )
     

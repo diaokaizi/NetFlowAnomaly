@@ -26,6 +26,13 @@ maegan:
   b2: 0.9
   n_critic: 5
 
+mysql:
+  host: '127.0.0.1'
+  user: 'root'
+  password: '123456'
+  database: 'netflow'
+  port: '3306'
+  
 ftp_server: "10.16.1.2"
 ftp_user: "mahegu"
 ftp_password: "6904b83623"

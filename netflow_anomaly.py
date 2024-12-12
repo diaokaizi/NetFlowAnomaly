@@ -110,7 +110,7 @@ class NetFlowAnomaly:
         detect_task.anomaly_detection_result = self.find_anomaly_ip(anomaly_flow_with_preds, os.path.join(output_dir, 'top_ips.csv'))
 
         # 保存结果
-        detect_task.insert_data(MySQL())
+        detect_task.insert_data(MySQL(self.config))
         if self.config["local_save"]:
             shutil.rmtree(temp_output_dir)
         else:
