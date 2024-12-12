@@ -4,15 +4,8 @@ import sys
 import glob
 sys.path[0]='/vdb2/NetFlowAnomaly'
 
-from time import time
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 import torch
-import numpy as np
-from f_dygat.read_data import Dataset
-from f_dygat.f_dygat import Flow_DyGAT
 from f_dygat.utils import set_seed
-from maegan.maegan import MAEGAN
 import pandas as pd
 import yaml
 from netflow_anomaly import NetFlowAnomaly

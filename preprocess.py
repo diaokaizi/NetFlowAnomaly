@@ -6,7 +6,6 @@ import joblib  # 用于保存和加载编码器
 import tarfile
 # Define the input and output directories
 import tempfile
-from multiprocessing import Pool
 
 
 def process_file(file_path, ip_protocol_encoder):
