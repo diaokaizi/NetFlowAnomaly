@@ -40,8 +40,8 @@ class Flow_DyGAT():
         self.flow_num = config["flow_num"]
 
 
-    def read_data(self, input_dir) -> Dataset:
-        data = Dataset(input_dir, self.flow_num)
+    def read_data(self, csv_list) -> Dataset:
+        data = Dataset(csv_list, self.flow_num)
         t0=time()
         print('结构特征图生成时间为', time()-t0)
         ip_lens=[len(ips) for ips in data.ip_list]
@@ -136,7 +136,8 @@ class Flow_DyGAT():
     
     def predict_with_flow_anomaly(self, data:Dataset):
         graph_embs, df_preds = self.predict(data)
-
+        print(data.flow_list.shape)
+        print(df_preds.shape)
         df_flow_with_preds = pd.concat([data.flow_list, df_preds], axis=1)
         return graph_embs, df_flow_with_preds.values.reshape(-1,1000,5)[self.seq_len:]
 

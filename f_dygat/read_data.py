@@ -23,7 +23,7 @@ class GraphData():
         self.flow_list = flow_list
 
 class Dataset():
-    def __init__(self, input_dir, flow_num):
+    def __init__(self, df_list, flow_num):
         self.adj_list=[]
         self.label_list=[]
         self.Ain_list=[]
@@ -31,7 +31,7 @@ class Dataset():
         self.A_list=[]
         self.ip_list=[] # 每个图的ip
         self.node_feats={} # 随机生成的节点特征
-        self.input_dir = input_dir
+        self.df_list = df_list
         self.flow_num = flow_num
         self.gen_graphs()
     
@@ -99,20 +99,16 @@ class Dataset():
         # }
 
     def process_cst(self):
-        t0=time()
-        print(f"扫描目录{os.path.join(self.input_dir, '*.csv')}")
-        csv_list=glob.glob(os.path.join(self.input_dir, '*.csv'))
-        print("共发现%s个csv文件"%len(csv_list))
         # 读取文件
         dataframe_list=[]
-        for file in sorted(csv_list):
-            print(file)
-            df=pd.read_csv(file, index_col=None, encoding='unicode_escape')
-            df = df[~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)].dropna()
+        print("读取文件")
+        for df in self.df_list:
+            # df = df[~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)].dropna()
+            print(f"读取文件{df.shape}")
             k = math.floor(len(df) / self.flow_num)
             df = df.iloc[:k * self.flow_num, :]
             dataframe_list.append(df.iloc[:k*self.flow_num,:])
-        df = pd.concat(dataframe_list)
+        df = pd.concat(dataframe_list, ignore_index=True)
         # Flow特征
         feats = df.drop(columns=[
             'ipv4_initiator', 'ipv4_responder', 'start_time'
@@ -125,12 +121,12 @@ class Dataset():
         # 特征归一化
         mm = MinMaxScaler()
         feats = mm.fit_transform(feats)
+        print("生成特征列表")
         
         # 生成特征列表
         self.feat_list = feats.reshape(-1, self.flow_num, feats.shape[1])
+        print("生成特征列表ok")
         # print(len(self.label_file))
         # print(len(self.edge_file))
         # print(len(self.feat_file))
         # 保存处理后的数据
-        
-        print('预处理时间:', time() - t0)

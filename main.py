@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import glob
 sys.path[0]='/vdb2/NetFlowAnomaly'
 
 from time import time
@@ -53,6 +54,14 @@ if __name__ =='__main__':
     device=torch.device('cuda:1') if torch.cuda.is_available() else torch.device('cpu')
     config["device"]=device
     netFlow_anomaly = NetFlowAnomaly(config)
-    # netFlow_anomaly.train("/vdb2/cst/GCN/data/cst_out")
+    # netFlow_anomaly.train()
     # netFlow_anomaly.run_detect_job("/vdb2/cst/GCN/data/cst_out2")
-    netFlow_anomaly.run_detect_job()
+    netFlow_anomaly.run_detect_task()
+    
+    temp_files = glob.glob('/tmp/torch_geometric*')
+    for file in temp_files:
+        try:
+            os.remove(file)
+            print(f"Removed temporary file: {file}")
+        except Exception as e:
+            print(f"Error removing {file}: {e}")

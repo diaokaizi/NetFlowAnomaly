@@ -2,10 +2,14 @@ seed: 42
 output_dir: data
 model_dir: model
 percentage: 0.05
-netflow_datasource_path: /iharbor/mahegu/t_fpc_flow_log_record
+data_source_type: reclone
+reclone_path: /iharbor/mahegu/t_fpc_flow_log_record
+ftp_path: /t_fpc_flow_log_record
+train_data_len: 2
+local_save: false
 
 f_dygat:
-  epochs: 1
+  epochs: 50
   learning_rate: 0.0001
   in_dim: 69
   out_dim: 32
@@ -13,7 +17,7 @@ f_dygat:
   flow_num: 1000
 
 maegan:
-  n_epochs: 10
+  n_epochs: 80
   in_dim: 64
   maxAE: 10
   batch_size: 64
@@ -22,3 +26,6 @@ maegan:
   b2: 0.9
   n_critic: 5
 
+ftp_server: "10.16.1.2"
+ftp_user: "mahegu"
+ftp_password: "6904b83623"
