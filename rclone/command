@@ -1,0 +1,1 @@
+rclone mount mahegu:mahegu /iharbor/mahegu/ --cache-dir /cache/dir/vfsmout/ --vfs-cache-mode off --allow-non-empty --read-only --daemon

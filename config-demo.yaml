@@ -1,0 +1,39 @@
+seed: 42
+output_dir: data
+model_dir: model
+percentage: 0.05
+data_source_type: reclone
+reclone_path: /iharbor/mahegu/t_fpc_flow_log_record
+ftp_path: /t_fpc_flow_log_record
+train_data_len: 2
+local_save: false
+otx_key: 'xxx'
+
+f_dygat:
+  epochs: 50
+  learning_rate: 0.0001
+  in_dim: 69
+  out_dim: 32
+  seq_len: 5
+  flow_num: 1000
+
+maegan:
+  n_epochs: 80
+  in_dim: 64
+  maxAE: 10
+  batch_size: 64
+  lr: 0.0001
+  b1: 0.5
+  b2: 0.9
+  n_critic: 5
+
+mysql:
+  host: '127.0.0.1'
+  user: 'root'
+  password: 'xxx'
+  database: 'netflow'
+  port: '3306'
+  
+ftp_server: "xxx"
+ftp_user: "xxx"
+ftp_password: "xxx"
