@@ -18,7 +18,8 @@ class NetFlowAnomaly:
     def get_task_info(self, type = "ftp"):
         now = datetime.datetime.now()
         timestamp = datetime.datetime.timestamp(now)
-        timestamp = datetime.datetime.fromtimestamp(timestamp - timestamp % 300 - 1800) # 获取半个小时前的数据
+        # timestamp = datetime.datetime.fromtimestamp(timestamp - timestamp % 300 - 1800) # 获取半个小时前的数据
+        timestamp = datetime.datetime.fromtimestamp(timestamp - timestamp % 300 - self.config["time_diff"])
         task_name = timestamp.strftime('task_%Y%m%d_%H%M')
         output_dir = os.path.join(self.config["output_dir"], task_name)
         temp_output_dir = os.path.join(output_dir, "csv_temp")
