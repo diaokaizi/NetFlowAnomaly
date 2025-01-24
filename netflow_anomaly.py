@@ -46,7 +46,7 @@ class NetFlowAnomaly:
     def get_train_info(self, type = "ftp"):
         now = datetime.datetime.now()
         timestamp = datetime.datetime.timestamp(now)
-        timestamp = datetime.datetime.fromtimestamp(timestamp - timestamp % 300 - 3600) # 获取半个小时前的数据
+        timestamp = datetime.datetime.fromtimestamp(timestamp - timestamp % 300 - self.config["time_diff"])
         task_name = timestamp.strftime('train_%Y%m%d_%H%M')
         output_dir = os.path.join(self.config["output_dir"], task_name)
         temp_output_dir = os.path.join(output_dir, "csv_temp")
@@ -79,7 +79,7 @@ class NetFlowAnomaly:
         )
         # 数据预处理
         start_time = datetime.datetime.now()
-        df_list, netflow_data_size, netflow_data_count = self.preprocess.process(
+        df_list, netflow_data_size, netflow_data_count, total_bytes, total_packets = self.preprocess.process(
             output_dir=temp_output_dir, 
             encoder_path=os.path.join(temp_output_dir, "encoder"),
             input_file_path_list=file_paths
@@ -87,6 +87,8 @@ class NetFlowAnomaly:
         detect_task.preprocessing_time = (datetime.datetime.now() - start_time).total_seconds()
         detect_task.netflow_data_size = netflow_data_size
         detect_task.netflow_data_count = netflow_data_count
+        detect_task.total_bytes = total_bytes
+        detect_task.total_packets = total_packets
 
         # 图构造
         start_time = datetime.datetime.now()

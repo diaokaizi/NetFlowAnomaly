@@ -66,6 +66,8 @@ class Preprocess:
         result = []
         netflow_data_size = 0
         netflow_data_count = 0
+        total_bytes = 0
+        total_packets = 0
         for tar_file_path in file_path_list:
             print(f"开始解压{tar_file_path}")
 
@@ -116,14 +118,14 @@ class Preprocess:
                         ]
 
                         processed_df = df[required_columns]
-
+                        total_bytes = processed_df['total_bytes'].sum()
+                        total_packets = processed_df['total_packets'].sum()
                         result.append(processed_df)
                         # 保存处理后的数据到新的 CSV 文件
                         # output_file_name = os.path.basename(file_path) + '.csv'
                         # print(processed_df.shape)
                         # processed_df.to_csv(os.path.join(output_dir, output_file_name), index=False)
-        
-        return result, netflow_data_size, netflow_data_count
+        return result, netflow_data_size, netflow_data_count, total_bytes, total_packets
 
 if __name__ =='__main__':
     # input_dir = '/vdb2/cst/GCN/data/cst'

@@ -2,7 +2,6 @@ import argparse
 import os
 import sys
 import glob
-sys.path[0]='/vdb2/NetFlowAnomaly'
 import shutil
 import torch
 from f_dygat.utils import set_seed
@@ -40,7 +39,7 @@ def find_anomaly_ip(anomaly_flow_with_preds, save_path):
 
 
 if __name__ =='__main__':
-    os.chdir('/vdb2/NetFlowAnomaly')
+    os.chdir('/root/NetFlowAnomaly')
     
     config, mode=parse()
     set_seed(config["seed"]) # 设置随机数种子

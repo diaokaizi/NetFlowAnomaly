@@ -52,6 +52,8 @@ class Detect_Task:
         self.anomaly_detection_result = ""
         self.extend = ""
         self.anomaly_ips = []
+        self.total_bytes = 0
+        self.total_packets = 0
 
     def insert_detect_task_sql(self):
         """
@@ -73,8 +75,10 @@ class Detect_Task:
                 anomaly_detection_time,
                 anomaly_detection_result,
                 extend,
-                anomaly_ip_count
-            ) VALUES ('%s','%s',%s,%s,%s,%s,'%s','%s',%s,%s,%s,%s,'%s','%s', %s)
+                anomaly_ip_count,
+                total_bytes,
+                total_packets
+            ) VALUES ('%s','%s',%s,%s,%s,%s,'%s','%s',%s,%s,%s,%s,'%s','%s', %s,%s,%s)
         """
         data = (
             self.task_name,
@@ -92,6 +96,8 @@ class Detect_Task:
             self.anomaly_detection_result,
             self.extend,
             len(self.anomaly_ips),
+            self.total_bytes,
+            self.total_packets,
         )
         return sql % data
 

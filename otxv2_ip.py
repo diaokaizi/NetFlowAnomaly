@@ -34,8 +34,14 @@ class OTXv2_IP:
             pulses = self.getValue(result, ['pulse_info', 'pulses'])
             if pulses:
                 for pulse in pulses:
+                    info = {}
                     if 'name' in pulse:
-                        alerts.append(pulse['name'])
+                        info['name'] = pulse['name']
+                    if 'modified' in pulse:
+                        info['modified'] = pulse['modified']
+                    if 'created' in pulse:
+                        info['created'] = pulse['created']
+                    alerts.append(info)
 
         return alerts
     
