@@ -20,7 +20,7 @@ class MySQL:
         except Exception as e:
             self.connc.rollback()
             print(e)
-        return data
+        # return data
     
         
     def execute_many(self, sql:str, data:list):

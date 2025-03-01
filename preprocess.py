@@ -120,6 +120,7 @@ class Preprocess:
                         processed_df = df[required_columns]
                         total_bytes = processed_df['total_bytes'].sum()
                         total_packets = processed_df['total_packets'].sum()
+                        processed_df = processed_df.head(2000000)
                         result.append(processed_df)
                         # 保存处理后的数据到新的 CSV 文件
                         # output_file_name = os.path.basename(file_path) + '.csv'

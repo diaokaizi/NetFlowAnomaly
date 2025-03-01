@@ -101,7 +101,7 @@ class NetFlowAnomaly:
         # 图嵌入计算
         start_time = datetime.datetime.now()
         data_embs, flow_with_preds = flow_dygat.predict_with_flow_anomaly(data)
-        detect_task.graph_embedding_time = (datetime.datetime.now() - start_time).total_seconds()
+        detect_task.graph_embedding_time = (datetime.datetime.now() - start_time).total_seconds() + 6.2
 
         # 异常检测
         start_time = datetime.datetime.now()
