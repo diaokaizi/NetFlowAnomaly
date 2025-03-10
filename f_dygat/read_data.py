@@ -33,6 +33,7 @@ class Dataset():
         self.node_feats={} # 随机生成的节点特征
         self.df_list = df_list
         self.flow_num = flow_num
+        self.df = None
         self.gen_graphs()
     
     def normalize_random(self,adj):
@@ -109,6 +110,7 @@ class Dataset():
             df = df.iloc[:k * self.flow_num, :]
             dataframe_list.append(df.iloc[:k*self.flow_num,:])
         df = pd.concat(dataframe_list, ignore_index=True)
+        self.df = df
         # Flow特征
         feats = df.drop(columns=[
             'ipv4_initiator', 'ipv4_responder', 'start_time'

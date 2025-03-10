@@ -39,7 +39,7 @@ def find_anomaly_ip(anomaly_flow_with_preds, save_path):
 
 
 if __name__ =='__main__':
-    os.chdir('/root/NetFlowAnomaly')
+    os.chdir('/root/NetFlowAnomaly2')
     
     config, mode=parse()
     set_seed(config["seed"]) # 设置随机数种子

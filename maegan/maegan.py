@@ -16,25 +16,27 @@ import pickle
 
 class MAEGAN:
 
-    def __init__(self, config):
+    def __init__(self, config, save_dir = "maegan"):
         # Parameters:
         self.device = config["device"]
 
-        self.model_dir = os.path.join(config["model_dir"], "maegan")
+        self.model_dir = os.path.join(config["model_dir"], save_dir)
         os.makedirs(self.model_dir, exist_ok=True)
         os.makedirs(os.path.join(self.model_dir, "mae"), exist_ok=True)
         os.makedirs(os.path.join(self.model_dir, "gan"), exist_ok=True)
 
-        config = config["maegan"]
-        self.mae_model = MAE(config["in_dim"],config["maxAE"],0,0, feature_map=None)
-        self.batch_size = config["batch_size"]
-        self.n_epochs = config["n_epochs"]
-        self.in_dim = config["in_dim"]
-        self.maxAE = config["maxAE"]
-        self.lr = config["lr"]
-        self.b1 = config["b1"]
-        self.b2 = config["b2"]
-        self.n_critic = config["n_critic"]
+        self.in_dim = config["maegan"]["in_dim"]
+        if save_dir != "maegan":
+            self.in_dim = config["f_dygat"]["in_dim"]
+
+        self.mae_model = MAE(self.in_dim, config["maegan"]["maxAE"],0,0, feature_map=None)
+        self.batch_size = config["maegan"]["batch_size"]
+        self.n_epochs = config["maegan"]["n_epochs"]
+        self.maxAE = config["maegan"]["maxAE"]
+        self.lr = config["maegan"]["lr"]
+        self.b1 = config["maegan"]["b1"]
+        self.b2 = config["maegan"]["b2"]
+        self.n_critic = config["maegan"]["n_critic"]
         self.feature_map = None
         self.generator = None
         self.discriminator = None
@@ -42,8 +44,9 @@ class MAEGAN:
         self.gan_input_dim = None
 
 
+
     def train(self, data):
-        print("Running KitNET:")
+        print("Running MAE:")
         mae_output = self.trainMAE(data)
         print("Running fanogan:")
         train_dataloader = self.load_gan_input(mae_output)
@@ -60,12 +63,13 @@ class MAEGAN:
 
     def detect(self, data, output_dir):
         mae_output = self.testMAE(data)
-        test_dataloader = self.load_gan_input(mae_output)
+        test_dataloader = self.load_gan_input(mae_output, batch_size = 1)
         return self.test_anomaly_detection(test_dataloader, "cpu", output_dir)
 
-    def load_gan_input(self, mae_output):
+    def load_gan_input(self, mae_output, batch_size = None):
         mae_output = torch.from_numpy(mae_output).float()
-        batch_size = self.batch_size
+        if batch_size == None:
+            batch_size = self.batch_size
         dataset = SimpleDataset(mae_output, np.zeros(len(mae_output)), transform=None)
         train_dataloader = DataLoader(dataset, batch_size=batch_size,shuffle=False)
         return train_dataloader
@@ -76,8 +80,6 @@ class MAEGAN:
                 self.mae_model.trainfm(data[i,]) #will train during the grace periods, then execute on all the rest.
             self.feature_map = self.mae_model.cluster()
             gan_input_dim = len(self.feature_map)
-        print(self.feature_map)
-        print(gan_input_dim)
         output = np.zeros([data.shape[0], gan_input_dim]) # a place to save the scores
         for i in tqdm(range(data.shape[0])):
             output[i] = self.mae_model.train(data[i,]) #will train during the grace periods, then execute on all the rest.
@@ -253,6 +255,7 @@ class MAEGAN:
             torch.save(self.encoder.state_dict(), os.path.join(self.model_dir, "gan", "encoder"))
 
     def test_anomaly_detection(self, dataloader, device, output_dir, kappa=1.0):
+        os.makedirs(output_dir, exist_ok=True)
         gan_dir = os.path.join(self.model_dir, "gan")
         self.generator.load_state_dict(torch.load(os.path.join(gan_dir, "generator")))
         self.discriminator.load_state_dict(torch.load(os.path.join(gan_dir, "discriminator")))
@@ -293,7 +296,7 @@ class MAEGAN:
 
     def save(self):
         os.makedirs(self.model_dir, exist_ok=True)
-        # 保存 KitNET 的结构和超参数
+        # 保存 MAEGAN 的结构和超参数
         with open(os.path.join(self.model_dir, "maegan.pkl"), "wb") as f:
             pickle.dump(self, f)
 
@@ -305,10 +308,10 @@ class MAEGAN:
         torch.save(self.discriminator.state_dict(), os.path.join(gan_dir, "discriminator"))
         torch.save(self.encoder.state_dict(), os.path.join(gan_dir, "encoder"))
 
-    # 加载 KitNET 模型，包括所有 dA 实例的权重
+    # 加载 MAEGAN 模型，包括所有 dA 实例的权重
     @staticmethod
-    def load(config) -> "MAEGAN":
-        model_dir = os.path.join(config["model_dir"], "maegan")
+    def load(config, save_dir = "maegan") -> "MAEGAN":
+        model_dir = os.path.join(config["model_dir"], save_dir)
 
         with open(os.path.join(model_dir, "maegan.pkl"), "rb") as f:
             model = pickle.load(f)

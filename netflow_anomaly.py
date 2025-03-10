@@ -9,6 +9,9 @@ from preprocess import Preprocess
 import shutil
 from mysql import MySQL, Detect_Task
 from otxv2_ip import OTXv2_IP
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+import joblib
+
 class NetFlowAnomaly:
     def __init__(self, config):
         self.config = config
@@ -111,10 +114,13 @@ class NetFlowAnomaly:
 
         # 按比例选择结果输出
         percentage = self.config["percentage"]
-        num_samples = int(len(scores) * percentage)
+        num_samples = max(int(len(scores) * percentage), 1)
         anomaly_indices = np.argsort(scores)[-num_samples:] #选择异常概率最大的几个样本
-        anomaly_flow_with_preds = flow_with_preds[anomaly_indices]
-        detect_task.anomaly_detection_result, ips = self.find_anomaly_ip(anomaly_flow_with_preds, os.path.join(output_dir, 'top_ips.csv'))
+        # 流异常检测
+        detect_task.anomaly_detection_result, ips = self.flow_task(data, anomaly_indices, os.path.join(output_dir, "flow_task"))
+
+        # anomaly_flow_with_preds = flow_with_preds[anomaly_indices]
+        # detect_task.anomaly_detection_result, ips = self.find_anomaly_ip(anomaly_flow_with_preds, os.path.join(output_dir, 'top_ips.csv'))
 
         # otx异常情报
         detect_task.anomaly_ips = self.otxv2_ip.batch_get_anomaly_ip(ips)
@@ -124,31 +130,74 @@ class NetFlowAnomaly:
         if self.config["local_save"]:
             shutil.rmtree(temp_output_dir)
         else:
+            shutil.rmtree(temp_output_dir)
             shutil.rmtree(output_dir)
+
+    def flow_task(self, data, anomaly_indices, output_dir):
+        window_df = []
+        for idx in anomaly_indices:
+            start_idx = idx * 1000
+            end_idx = (idx + 1) * 1000
+            window_df.append(data.df.iloc[start_idx:end_idx])
+        df = pd.concat(window_df, axis=0)
+        raw_df = df
+        df=df.drop(columns=['start_time', 'ipv4_initiator', 'ipv4_responder'])
+        test = df.to_numpy().astype('float32')
+        minmax_scaler = joblib.load('minmax_scaler.pkl')
+        test = minmax_scaler.transform(test)
+        # train = df.to_numpy().astype('float32')
+        # minmax_scaler = MinMaxScaler()
+        # train = minmax_scaler.fit_transform(train) 
+        # joblib.dump(minmax_scaler, 'minmax_scaler.pkl')
+        maegan = MAEGAN.load(self.config, save_dir = "flow_maegan")
+        scores = maegan.detect(test, output_dir)
+        print(scores)
+        raw_df['anomaly_score'] = scores
+        top_ips = (
+            raw_df.groupby("ipv4_initiator")["anomaly_score"]
+            .mean()
+            .nlargest(10)  # 获取 anomaly_score 累计值最大的前 top_n 个 IP
+            .reset_index()
+        )
+        print(top_ips)
+        return top_ips.to_json(orient='records'), top_ips["ipv4_initiator"]
+
+    def train_flow_maegan(self, df):
+        maegan = MAEGAN(self.config, save_dir = "flow_maegan")
+        df=df.drop(columns=['start_time', 'ipv4_initiator', 'ipv4_responder'])
+        train = df.to_numpy().astype('float32')
+        minmax_scaler = MinMaxScaler()
+        train = minmax_scaler.fit_transform(train) 
+        joblib.dump(minmax_scaler, 'minmax_scaler.pkl')
+        maegan.train(train)
 
     def train(self):
         start = time()
         job_name, file_paths, output_dir, temp_output_dir = self.get_train_info(self.config["data_source_type"])
-        df_list, netflow_data_size, netflow_data_count = self.preprocess.process(
+        df_list, netflow_data_size, netflow_data_count, total_bytes, total_packets = self.preprocess.process(
             output_dir=temp_output_dir, 
             encoder_path=os.path.join(temp_output_dir, "encoder"),
             input_file_path_list=file_paths
             )
         process_time = time()
+        # DyGAT训练
         flow_dygat = Flow_DyGAT(self.config)
         data, avg_graph_ip_count, ip_count = flow_dygat.read_data(df_list)
         group_time = time()
         flow_dygat.train(data)
         data_embs, _ = flow_dygat.predict(data)
         flow_dygat_time = time()
-        # MAEGAN训练
+        # 图的MAEGAN训练
         maegan = MAEGAN(self.config)
         maegan.train(data_embs)
         maegan_time = time()
+        # 流的MAEGAN训练
+        self.train_flow_maegan(data.df)
         shutil.rmtree(temp_output_dir)
         with open('data/time.txt', 'a') as f:
             f.write(f'job_name:{job_name}, 总耗时: {time()-start} 秒, 数据读取耗时:{process_time-start}, 图构造耗时:{group_time-process_time}, 图嵌入耗时:{flow_dygat_time-group_time}, 异常检测耗时:{maegan_time-flow_dygat_time}\n')
-
+        self.train_flow_maegan(data.df)
+        shutil.rmtree(temp_output_dir)
     def find_anomaly_ip(self, anomaly_flow_with_preds, save_path):
         df = pd.DataFrame(
             anomaly_flow_with_preds.reshape(-1, 5),  # 展平到 2D 形状，每个样本有 5 个属性
